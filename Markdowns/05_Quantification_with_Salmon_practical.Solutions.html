@@ -172,6 +172,8 @@ pre code {
 <div id="exercise-1---create-salmon-index" class="section level2">
 <h2>Exercise 1 - Create Salmon index</h2>
 <blockquote>
+<p>First ensure you are working in the correct directory</p>
+<pre class="bash"><code>cd ~/Course_Materials/RNAseq </code></pre>
 <ol style="list-style-type: decimal">
 <li>Create concatenated trancriptome/genome reference file</li>
 </ol>
@@ -258,7 +260,7 @@ Command Line Options:
 <h2>Exercise 3 - Run multiqc</h2>
 <blockquote>
 <ol style="list-style-type: decimal">
-<li>Run <code>multiqc</code> on the <code>salmon_output</code> directory and create a report called <code>Salmon_quantification_report</code> in the <code>salmon_output</code> directory. Look back to the previous session if you need a reminder on how to do this.</li>
+<li>Run <code>multiqc</code> on the <code>salmon_output</code> directory and create a report called <code>Salmon_quantification_report</code> in the <code>salmon_output</code> directory.</li>
 </ol>
 </blockquote>
 <pre class="bash"><code>multiqc -z -n Salmon_quantification_report -o salmon_output salmon_output</code></pre>
@@ -267,11 +269,10 @@ Command Line Options:
 <p><span class="math inline">\(\Rightarrow\)</span> <a href="../additional_scripts/Salmon_quantification_report.html">salmon_output/Salmon_quantification_report.html</a></p>
 </blockquote>
 <ol start="2" style="list-style-type: decimal">
-<li>Open the report and determine what percentage of the reads have been <em>aligned</em> to the transcriptome. Compare this to the QC report from the previous session.</li>
+<li>Open the report and determine what percentage of the reads have been <em>aligned</em> to the transcriptome.</li>
 </ol>
 </blockquote>
 <p>With Salmon we have ~85% of reads mapped to the transcriptome.</p>
-<p>If you look at the <a href="../additional_scripts/Alignment_QC_Report.html#picard-rna-assignment">RNAseq metrics section in the multiqc report</a> we generated in the previous section, you should see that for SRR7657883 we had ~85% reads aligned to Coding + UTR.</p>
 </div>
 
 

@@ -7,6 +7,10 @@ output:
 ---
 
 ## Exercise 1 - Create Salmon index
+> First ensure you are working in the correct directory
+>```{bash eval=FALSE}
+>cd ~/Course_Materials/RNAseq 
+>```
 > 1. Create concatenated trancriptome/genome reference file
 > ```{bash eval=FALSE}
 > cat references/Mus_musculus.GRCm38.cdna.chr14.fa.gz \
@@ -94,20 +98,13 @@ salmon quant \
 
 ## Exercise 3 - Run multiqc
 > 1. Run `multiqc` on the `salmon_output` directory and create a report called 
-> `Salmon_quantification_report` in the `salmon_output` directory. Look back to
-> the previous session if you need a reminder on how to do this.
+> `Salmon_quantification_report` in the `salmon_output` directory. 
 ```{bash eval = FALSE}
 multiqc -z -n Salmon_quantification_report -o salmon_output salmon_output
 ```
 >> $\Rightarrow$ [salmon_output/Salmon_quantification_report.html](../additional_scripts/Salmon_quantification_report.html)
 >
 > 2. Open the report and determine what percentage of the reads have been 
-> *aligned* to the transcriptome. Compare this to the QC report from the 
-> previous session.
+> *aligned* to the transcriptome.
 
 With Salmon we have ~85% of reads mapped to the transcriptome.
-
-If you look at the [RNAseq metrics section in the multiqc
-report](../additional_scripts/Alignment_QC_Report.html#picard-rna-assignment) we
-generated in the previous section, you should see that for SRR7657883 we had
-~85% reads aligned to Coding + UTR.

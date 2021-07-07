@@ -193,7 +193,7 @@ pre code {
 
 <div id="quasi-mapping-and-gene-expression-quantification" class="section level1">
 <h1>Quasi-mapping and gene expression quantification</h1>
-<p>So far we have QC’d our raw reads, aligned against the genome with HISAT2, and done some additional QC using the alignment results. The next step is to quantify the gene expression. One way would be to look at the alignments and use information about where genes are located on the genome to count the number of reads coming from each gene. This method is shown in the <a href>extended materials using the <code>featureCounts</code> tool</a>.</p>
+<p>The first step in our analysis is to quantify the gene expression. One way is to align our raw reads to the reference genome using a short read aligner, such as STAR, and then to look at the alignments and use information about where genes are located on the genome to count the number of reads coming from each gene. This method is shown in the <a href="S8_Read_Counts_with_SubRead.html">extended materials using the <code>featureCounts</code> tool</a>.</p>
 <p>An alternative is to use faster methods known as <em>quasi-mapping</em> or <em>pseudo-alignment</em>, followed by inferential estimation of gene expression. This approach has been developed over the past few years and has the advantages of being faster and more lightweight than full alignment (they can be run on a laptop rather than needing a high performance cluster). In addition these methods give more accurate estimates of gene expression at the transcript level and incorporate corrections for GC-content bias and sequence bias. They are also able to quantify multimapping reads in a more pragmatic manner than the standard alignment/counting approaches giving more accurate counts, particularly for genes belonging to families of genes with very similar sequences.</p>
 <p>There are various tools that use this approach such at <code>Kallisto</code>, <code>Sailfish</code> and <code>Salmon</code>; we will use <a href="https://combine-lab.github.io/salmon/"><code>Salmon</code></a> <span class="citation">(Patro 2017)</span>.</p>
 <p>You can find the full manual here:</p>
@@ -202,7 +202,7 @@ pre code {
 </div>
 <div id="indexing-the-transcriptome-for-salmon" class="section level1">
 <h1>1. Indexing the transcriptome for Salmon</h1>
-<p>Salmon encompasses both alignment and quantification in a single tool. As with HISAT2, we will need a reference to map the reads to, however, in this case we will be aligning to the transcriptome rather than the genome. The transcriptome reference is a fasta file containing sequences for all transcripts. Before we can run <code>Salmon</code> we need to create an index, just as we did for <code>HISAT2</code>. For common species is possible to <a href="http://refgenomes.databio.org/">download</a> pre-generated Salmon indexes, however, it is worth knowing how to create your own. This process is more computationally intensive and will not run on standard laptop or desktop.</p>
+<p>Salmon encompasses both alignment and quantification in a single tool. As with STAR, we will need a reference to map the reads to, however, in this case we will be aligning to the transcriptome rather than the genome. The transcriptome reference is a fasta file containing sequences for all transcripts. Before we can run <code>Salmon</code> we need to create an index, just as we did for <code>STAR</code>. For common species is possible to <a href="http://refgenomes.databio.org/">download</a> pre-generated Salmon indexes, however, it is worth knowing how to create your own. This process is more computationally intensive and will not run on standard laptop or desktop.</p>
 <p>The details of the index creation are taken from:</p>
 <p><a href="https://combine-lab.github.io/alevin-tutorial/2019/selective-alignment/" class="uri">https://combine-lab.github.io/alevin-tutorial/2019/selective-alignment/</a></p>
 <p>As well as including the transcriptome, we also want to include the genomic sequences. These will act as a <em>decoy</em> so that non-transcriptomic reads will not be erroneously counted against transcripts.</p>
@@ -212,34 +212,12 @@ pre code {
 <div id="indexing-the-transcriptome" class="section level2">
 <h2>Indexing the transcriptome</h2>
 <p>We are going to be giving Salmon both genomic and transcriptomic sequences to index. First we need to create a single fasta file that contains both sets of sequences. It is important to have the transcriptome sequences first in the file.</p>
-<p>The genomic sequences are the <em>decoys</em> and we need a file that lists these so that Salmon will know which are which. In out case we are just using chr14, so we just need to create a file containing this.</p>
+<p>The genomic sequences are the <em>decoys</em> and we need a file that lists these so that Salmon will know which are which. In our case we are just using chr14, so we just need to create a file containing this.</p>
 <p>Finally, we will need to provide salmon with the name of a directory in which to create the index. We don’t need to make the directory, salmon will do this itself.</p>
 </div>
 <div id="exercise-1---create-salmon-index" class="section level2">
 <h2>Exercise 1 - Create Salmon index</h2>
-<blockquote>
-<ol style="list-style-type: decimal">
-<li>Create concatenated trancriptome/genome reference file</li>
-</ol>
-<pre class="bash"><code>cat references/Mus_musculus.GRCm38.cdna.chr14.fa.gz \
-   references/Mus_musculus.GRCm38.dna_sm.chr14.fa.gz \
-   &gt; references/gentrome.chr14.fa.gz</code></pre>
-<ol start="2" style="list-style-type: decimal">
-<li>Create decoy sequence list from the genomic fasta</li>
-</ol>
-<pre class="bash"><code>echo &quot;14&quot; &gt; references/decoys.txt</code></pre>
-<ol start="3" style="list-style-type: decimal">
-<li>Use <code>salmon index</code> to create the index. You will need to provide three pieces of information:
-<ul>
-<li>the <strong>Transcript fasta file</strong> - <em>references/gentrome.chr14.fa.gz</em></li>
-<li>the <strong>decoys</strong> - <em>references/decoys.txt</em></li>
-<li>the <strong>salmon index</strong> - a directory to write the index to, use <strong>references/salmon_index_chr14</strong></li>
-</ul></li>
-</ol>
-<p>Also add <code>-p 7</code> to the command to instruct salmon to use 7 threads/cores. To find the flags for the other three pieces of information use:</p>
-<pre class="bash"><code>salmon index --help</code></pre>
-<p>One thing to note here is that we have not specified the <code>-k</code> parameter. This parameter sets the kmer size that the index will be based on and relates to the minimum size of kmer used for quasi-mapping. The default is 31 bases, and this is fine for read sizes over 75 bases. If your read size is less that 75, you would need to adjust this. You should set the kmer size to slightly less than half of the read length. Quasi-mapping looks for kmers that are perfect match to the reference sequence. If the kmer size is more than half the read length, then a read with a mismatch in the middle of the read will never be able to be mapped to the transcriptome, even if all other bases are a perfect match for the sequence at the location that it originated.</p>
-</blockquote>
+<p><code>&gt; First ensure you are working in the correct directory &gt; &gt;```bash &gt;cd ~/Course_Materials/RNAseq  &gt;``` &gt; 1. Create concatenated trancriptome/genome reference file. The two files that &gt; we need are in the</code>references<code>directory. &gt; &gt;```bash &gt;cat references/Mus_musculus.GRCm38.cdna.chr14.fa.gz \ &gt;    references/Mus_musculus.GRCm38.dna_sm.chr14.fa.gz \ &gt;    &gt; references/gentrome.chr14.fa.gz &gt;``` &gt; 2. Create decoy sequence list from the genomic fasta &gt; &gt;```bash &gt;echo &quot;14&quot; &gt; references/decoys.txt &gt;``` &gt; 3. Use</code>salmon index<code>to create the index. You will need to provide three &gt;  pieces of information: &gt;     * the **Transcript fasta file** - *references/gentrome.chr14.fa.gz* &gt;     * the **decoys** - *references/decoys.txt* &gt;     * the **salmon index** - a directory to write the index to, use **references/salmon_index_chr14**   &gt; &gt; Also add</code>-p 7<code>to the command to instruct salmon to use 7 threads/cores. &gt; To find the flags for the other three pieces of information use: &gt; &gt;```bash &gt;salmon index --help &gt;``` &gt; &gt; One thing to note here is that we have not specified the</code>-k` parameter. This &gt; parameter sets the kmer size that the index will be based on and relates to &gt; the minimum size of kmer used for quasi-mapping. The default is 31 bases, and &gt; this is fine for read sizes over 75 bases. If your read size is less that 75, &gt; you would need to adjust this. You should set the kmer size to slightly less &gt; than half of the read length. Quasi-mapping looks for kmers that are perfect &gt; match to the reference sequence. If the kmer size is more than half the read &gt; length, then a read with a mismatch in the middle of the read will never be &gt; able to be mapped to the transcriptome, even if all other bases are a perfect &gt; match for the sequence at the location that it originated.</p>
 </div>
 </div>
 <div id="gene-expression-quantification" class="section level1">
@@ -254,7 +232,7 @@ pre code {
 <li>Use <code>salmon quant</code> to quantify the gene expression from the raw fastq. To see all the options run <code>salmon quant --help-reads</code>. There are lot of possible parameters, we will need to provide the following:
 <ul>
 <li><strong>salmon index</strong> - <em>references/salmon_index</em></li>
-<li><code>-l A</code> - Salmon needs to use some information about the library preparation, we could explicitly give this, but it is easy enough for Salmon to <strong>A</strong>utomatically infer this from the data.</li>
+<li><code>-l A</code> - Salmon needs to use some information about the <strong>l</strong>ibrary preparation, we could explicitly give this, but it is easy enough for Salmon to <strong>A</strong>utomatically infer this from the data.</li>
 <li><strong>File containing the #1 mates</strong> - <em>fastq/SRR7657883.sra_1.fastq.gz</em></li>
 <li><strong>File containing the #2 mates</strong> - <em>fastq/SRR7657883.sra_2.fastq.gz</em></li>
 <li><strong>Output quantification directory</strong> - <em>salmon_output/SRR7657883</em></li>
@@ -268,19 +246,27 @@ pre code {
 </div>
 <div id="a-quick-summary-of-the-results" class="section level1">
 <h1>3. A quick summary of the results</h1>
+<p><a href="https://multiqc.info/">MultiQC</a> is a tool for collating multiple QC results files into a single report. Its use is simple, you just run the command <code>multiqc</code> on the directory containing your metrics files. The general command is:</p>
+<pre><code>multiqc &lt;directory containing metrics files&gt;</code></pre>
+<p><code>multiqc</code> will then scan all the files in the directory to find metrics files it recognises. We will add a couple of additionaly options to control the output directory and the name of the report.</p>
 <p>We have generated salmon quantification results for all samples in the directory <code>salmon</code>. You can run <code>multiqc</code> on these results to get some basic statistics regarding the percentage of reads that have been counted against the transcriptome.</p>
 <div id="exercise-3---run-multiqc" class="section level2">
 <h2>Exercise 3 - Run multiqc</h2>
 <blockquote>
 <ol style="list-style-type: decimal">
-<li>Run <code>multiqc</code> on the <code>salmon_output</code> directory and create a report called <code>Salmon_quantification_report</code> in the <code>salmon_output</code> directory. Look back to the previous session if you need a reminder on how to do this.</li>
-<li>Open the report and determine what percentage of the reads have been <em>aligned</em> to the transcriptome. Compare this to the QC report from the previous session.</li>
+<li>Run <code>multiqc</code> on the <code>salmon</code> directory and create a report called <code>Salmon_quantification_report</code> in the <code>salmon</code> directory.</li>
+</ol>
+</blockquote>
+<pre class="bash"><code>multiqc -z -n Salmon_quantification_report -o salmon salmon</code></pre>
+<blockquote>
+<ol start="2" style="list-style-type: decimal">
+<li>Open the report and determine what percentage of the reads have been <em>aligned</em> to the transcriptome.</li>
 </ol>
 </blockquote>
 </div>
-<div id="make-transcript-to-gene-table" class="section level2">
-<h2>Make transcript to gene table</h2>
-<p>Salmon quantifies gene expression at the transcript level. When we come to do our differential gene expression analysis in R, we will want to summarise this to the gene level. To do this we need a table that links transcript IDs to gene IDs. <strong>We have already created this for you</strong>, but, for reference, the code below was used to generate this table from the sequence headers in the transcriptome reference file.</p>
+<div id="make-the-transcript-to-gene-table" class="section level2">
+<h2>Make the transcript to gene table</h2>
+<p>Salmon quantifies gene expression at the transcript level. When we come to do our differential gene expression analysis in R, we will want to summarize this to the gene level. To do this we need a table that links transcript IDs to gene IDs. <strong>We have already created this for you</strong>, but, for reference, the code below was used to generate this table from the sequence headers in the transcriptome reference file.</p>
 <p style="color:red">
 You do not need to run this code
 </p>

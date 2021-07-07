@@ -9,12 +9,12 @@ bibliography: ref.bib
 
 # Quasi-mapping and gene expression quantification
 
-So far we have QC'd our raw reads, aligned against the genome with HISAT2, and 
-done some additional QC using the alignment results. The next step is to 
-quantify the gene expression. One way would be to look at the alignments and
-use information about where genes are located on the genome to count the number
-of reads coming from each gene. This method is shown in the [extended materials
-using the `featureCounts` tool]().
+The first step in our analysis is to quantify the gene expression. One way is to
+align our raw reads to the reference genome using a short read aligner, such as
+STAR, and then  to look at the alignments and use information about where genes
+are located on the genome to count the number of reads coming from each gene.
+This method is shown in the [extended materials using the `featureCounts`
+tool](S8_Read_Counts_with_SubRead.html).
 
 An alternative is to use faster methods known as *quasi-mapping* or
 *pseudo-alignment*, followed by inferential estimation of gene expression. This
@@ -42,10 +42,10 @@ a few extras.
 # 1. Indexing the transcriptome for Salmon
 
 Salmon encompasses both alignment and quantification in a single tool. As with
-HISAT2, we will need a reference to map the reads to, however, in this case we
+STAR, we will need a reference to map the reads to, however, in this case we
 will be aligning to the transcriptome rather than the genome. The transcriptome
 reference is a fasta file containing sequences for all transcripts. Before we
-can run `Salmon` we need to create an index, just as we did for `HISAT2`. For
+can run `Salmon` we need to create an index, just as we did for `STAR`. For
 common species is possible to [download](http://refgenomes.databio.org/)
 pre-generated Salmon indexes, however, it is worth knowing how to create your
 own. This process is more computationally intensive and will not run on
@@ -74,7 +74,7 @@ index. First we need to create a single fasta file that contains both sets of
 sequences. It is important to have the transcriptome sequences first in the file.
 
 The genomic sequences are the *decoys* and we need a file that lists
-these so that Salmon will know which are which. In out case we are just using
+these so that Salmon will know which are which. In our case we are just using
 chr14, so we just need to create a file containing this.
 
 Finally, we will need to provide salmon with the name of a directory in which to 
@@ -82,7 +82,12 @@ create the index. We don't need to make the directory, salmon will do this
 itself.
 
 ## Exercise 1 - Create Salmon index
-> 1. Create concatenated trancriptome/genome reference file
+`> First ensure you are working in the correct directory
+>```{bash eval=FALSE}
+>cd ~/Course_Materials/RNAseq 
+>````
+> 1. Create concatenated trancriptome/genome reference file. The two files that
+> we need are in the `references` directory.
 >```{bash eval=FALSE}
 >cat references/Mus_musculus.GRCm38.cdna.chr14.fa.gz \
 >    references/Mus_musculus.GRCm38.dna_sm.chr14.fa.gz \
@@ -134,7 +139,7 @@ this for the differential gene expression analysis in later sessions.)
 > To see all the options run `salmon quant --help-reads`. There are lot of 
 > possible parameters, we will need to provide the following:
 >       * **salmon index** - *references/salmon_index*
->       * `-l A` - Salmon needs to use some information about the library 
+>       * `-l A` - Salmon needs to use some information about the **l**ibrary 
 >         preparation, we could explicitly give this, but it is easy enough
 >         for Salmon to **A**utomatically infer this from the data.
 >       * **File containing the #1 mates** - *fastq/SRR7657883.sra_1.fastq.gz*
@@ -150,6 +155,17 @@ data is called `quant.sf`.
 
 # 3. A quick summary of the results
 
+[MultiQC](https://multiqc.info/) is a tool for collating multiple QC results
+files into a single report. Its use is simple, you just run the command
+`multiqc` on the directory containing your metrics files. The general command is:
+
+```
+multiqc <directory containing metrics files>
+```
+`multiqc` will then scan all the files in the directory to find metrics files it
+recognises. We will add a couple of additionaly options to control the output
+directory and the name of the report.
+
 We have generated salmon quantification results for all samples in the 
 directory `salmon`. You can run `multiqc` on these results to get some basic
 statistics regarding the percentage of reads that have been counted against the
@@ -157,17 +173,18 @@ transcriptome.
 
 ## Exercise 3 - Run multiqc
 
-> 1. Run `multiqc` on the `salmon_output` directory and create a report called 
-> `Salmon_quantification_report` in the `salmon_output` directory. Look back to
-> the previous session if you need a reminder on how to do this.
+> 1. Run `multiqc` on the `salmon` directory and create a report called 
+> `Salmon_quantification_report` in the `salmon` directory.
+```{bash eval = FALSE}
+multiqc -z -n Salmon_quantification_report -o salmon salmon
+```
 > 2. Open the report and determine what percentage of the reads have been 
-> *aligned* to the transcriptome. Compare this to the QC report from the 
-> previous session.
+> *aligned* to the transcriptome.
 
-## Make transcript to gene table
+## Make the transcript to gene table
 
 Salmon quantifies gene expression at the transcript level. When we come to do
-our differential gene expression analysis in R, we will want to summarise this
+our differential gene expression analysis in R, we will want to summarize this
 to the gene level. To do this we need a table that links transcript IDs to gene
 IDs. **We have already created this for you**, but, for reference, the code
 below was used to generate this table from the sequence headers in the
