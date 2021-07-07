@@ -15,7 +15,7 @@ output:
 >       **Course_Materials** directory using the `cd` (**c**hange
 >       **d**irectory) command:  
 >```{bash eval=FALSE}
-> cd ~/Course_Materials
+> cd ~/Course_Materials/RNAseq
 >```
 >
 > 2.   

@@ -16,7 +16,7 @@ output:
 >
 > `pwd` - to check **p**resent **w**working **d**irectory, then if necessary:
 ```{bash eval=FALSE}
-cd ~/Course_Materials
+cd ~/Course_Materials/RNAseq
 ```
 >
 > 2. Use `ls` to list the contents of the directory.  
