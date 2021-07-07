@@ -1,0 +1,1124 @@
+---
+title: "Introduction to Differential Gene Expression Analysis in R"
+subtitle: "CRUK Summer School 2021"
+author: "Ashley Sawle"
+date: "July 2021"
+output:
+  ioslides_presentation:
+    css: css/stylesheet.css
+    logo: images/crukcc-transparent-small.png
+    smaller: yes
+    widescreen: yes
+editor_options: 
+  chunk_output_type: console
+---
+## HTS Applications - Overview
+
+<div style="width: 28%; 
+    float: left;
+    border-style: solid; 
+    border-width: 1px;
+    border-radius: 28px; 
+    padding: 20px;
+    display: block;
+    height: 330px;
+    margin-top: 20px">
+<div style="text-align: center;">
+<span style="color: #2e2892;">**DNA Sequencing**</span>
+</div>
+
+* Genome Assembly
+    
+* SNPs/SVs/CNVs
+    
+* DNA methylation
+    
+* DNA-protein interactions (ChIPseq)
+
+* Chromatin Modification (ATAC-seq/ChIPseq)
+
+</div>
+
+<div style="width: 28%; 
+    float: left;
+    border-style: solid; 
+    border-width: 4px;
+    border-radius: 28px; 
+    border-color: #2e3192;
+    padding: 20px;
+    display: block;
+    height: 330px;
+    margin-left: 1.6%;
+    margin-top: 20px">
+<div style="text-align: center;">
+<a href="https://emea.illumina.com/content/dam/illumina-marketing/documents/applications/ngs-library-prep/for-all-you-seq-rna.pdf" style="color: #2e2892;">**RNA Sequencing**</a>
+</div>
+
+* Transcriptome Assembly
+
+* **Differential Gene Expression**
+
+* Fusion Genes
+
+* Splice variants
+
+</div>
+
+<div style="width: 28%; 
+    float: right;
+    border-style: solid; 
+    border-width: 1px;
+    border-radius: 28px; 
+    padding: 20px;
+    display: block;
+    height: 330px;
+    margin-top: 20px">
+<div style="text-align: center;">
+<span style="color: #2e2892;">**Single-Cell**</span>
+</div>
+
+* RNA/DNA
+
+* Low-level RNA/DNA detection
+
+* Cell-type classification
+
+* Dissection of heterogenous cell populations
+
+</div>
+
+## RNAseq Workflow
+
+
+<div style="width: 40%; 
+            float: left"> 
+
+            
+<div class="wkfthree2">
+<span style="color: #8b0000;">**Experimental Design**</span>
+</div>
+
+<div class="wkfthree2">
+<span style="color: #2e2892;">**Library Preparation**</span>
+</div>
+
+<div class="wkfthree2">
+<span style="color: #2e2892;">**Sequencing**</span>
+</div>
+
+<div class="wkfthree2">
+<span style="color: #2e2892;">**Bioinformatics Analysis**</span>
+</div>
+</div>
+
+<div style="margin-left: 60px;
+            float: none;">  
+            
+<img src="images/RNAseq_WorkFlow.png" style="width: 48%; margin-left: auto; margin-right: auto; display: block;">
+</div>
+
+<div style="text-align: right">
+<p style="font-size: 14px">Image adapted from: Wang, Z., et al. (2009), Nature Reviews Genetics, 10, 57–63.</p>
+</div>
+
+
+
+<!-- ## Designing the right experiment -->
+
+<!-- <img src="images/Experimental_Design-C_Ambrosino.jpg" class="centerimg" style="width: 90%"> -->
+
+<!-- <div style="text-align: right"> -->
+<!-- <p style="font-size: 14px">Comic by Christine Ambrosino http://www.hawaii.edu/fishlab/Nearside.htm</p> -->
+<!-- </div> -->
+
+## Designing the right experiment
+
+<!-- ### Key aspects of experimental design: -->
+
+<!-- * Experimental variables -->
+
+<!-- * Power: variance and replicates -->
+
+<!-- * Bias: confounding factors, randomisation, controls -->
+
+### A good experiment should:
+
+* Have clear objectives
+
+* Have sufficient power
+
+* Be amenable to statisical analysis
+
+* Be reproducible
+
+* More on experimental design later
+
+
+## Designing the right experiment
+
+### Practical considerations for RNAseq
+
+* Coverage: how many reads? 
+
+* Read length & structure: Long or short reads? Paired or Single end?  
+
+* Library preparation method: Poly-A, Ribominus, other? 
+
+* Controlling for batch effects
+
+## Designing the right experiment - How many reads do we need?
+
+
+<div style="line-height: 50%;"><br></div>
+The coverage is defined as:
+
+<div style="text-align: center; ">
+<p style="font-size: 26px;">
+$\frac{Read\,Length\;\times\;Number\,of\,Reads}{Length\,of\,Target\,Sequence}$
+</p>
+</div>
+
+The amount of sequencing needed for a given sample is determined by the goals of
+the experiment and the nature of the RNA sample.
+
+
+* For a general view of differential expression: 5–25 million reads per sample
+* For alternative splicing and lowly expressed genes: 30–60 million reads per sample.
+* In-depth view of the transcriptome/assemble new transcripts: 100–200 million reads
+* Targeted RNA expression requires fewer reads. 
+* miRNA-Seq or Small RNA Analysis require even fewer reads.
+
+## Designing the right experiment - Read length
+
+### Long or short reads? Paired or Single end?
+
+The answer depends on the experiment:
+
+* Gene expression – typically just a short read e.g. 50/75 bp; SE or PE.
+* kmer-based quantification of Gene Expression (Salmon etc.) - benefits from PE.
+* Transcriptome Analysis – longer paired-end reads (such as 2 x 75 bp).
+* Small RNA Analysis – short single read, e.g. SE50 - will need trimming.
+
+
+<!--
+
+## Designing the right experiment - Replication
+
+### Biological Replication
+
+* Measures the biological variations between individuals
+
+* Accounts for sampling bias
+
+### Technical Replication
+
+* Measures the variation in response quantification due to imprecision in the
+technique
+
+* Accounts for technical noise
+
+
+## Designing the right experiment - Replication
+
+### Biological Replication
+
+<div style="width: 45%;
+            float: left;">
+Each replicate is from an indepent biological individual
+
+* *In Vivo*:
+
+    * Patients
+    * Mice
+    
+* *In Vitro*:
+
+    * Different cell lines
+    * Different passages
+    
+</div>
+
+<div style="width: 45%;
+            float: right;">
+<img src="images/BioRep.jpg" class="centerimg" style="width: 95%">
+</div>
+
+## Designing the right experiment - Replication
+
+### Technical Replication
+
+<div style="width: 45%;
+            float: left;">
+Replicates are from the same individual but processed separately
+
+* Experimental protocol
+* Measurement platform
+</div>
+
+<div style="width: 45%;
+            float: right;">
+<img src="images/TechRep.jpg" class="centerimg" style="width: 55%">
+</div>
+
+-->
+
+## Designing the right experiment - Batch effects 
+
+* Batch effects are sub-groups of measurements that have qualitatively different behavior across conditions and are unrelated to the biological or scientific variables in a study.
+
+* Batch effects are problematic if they are confounded with the experimental variable.
+
+## Designing the right experiment - Batch effects
+
+<img src="images/BatchEffecta.svg" class="centerimg" style="width: 95%">
+
+## Designing the right experiment - Batch effects
+
+<img src="images/BatchEffectb.svg" class="centerimg" style="width: 95%">
+
+## Designing the right experiment - Batch effects 
+
+* Batch effects are sub-groups of measurements that have qualitatively different behavior across conditions and are unrelated to the biological or scientific variables in a study.
+
+* Batch effects are problematic if they are confounded with the experimental variable.
+
+* Batch effects that are randomly distributed across experimental variables can be controlled for.
+
+<!-- ## Designing the right experiment - Batch effects  -->
+
+<!-- <img src="images/BatchEffecta.svg" class="centerimg" style="width: 95%"> -->
+
+<!-- ## Designing the right experiment - Batch effects  -->
+
+<!-- <img src="images/BatchEffectb.svg" class="centerimg" style="width: 95%"> -->
+
+
+## Designing the right experiment - Batch effects 
+
+* Batch effects are sub-groups of measurements that have qualitatively different behavior across conditions and are unrelated to the biological or scientific variables in a study.
+
+* Batch effects are problematic if they are confounded with the experimental variable.
+
+* Batch effects that are randomly distributed across experimental variables can be controlled for.
+
+* Randomise all technical steps in data generation in order to avoid batch effects.
+
+<img src="images/PlateEmpty.svg" class="centerimg" style="width: 40%">
+
+## Designing the right experiment - Batch effects 
+
+* Batch effects are sub-groups of measurements that have qualitatively different behavior across conditions and are unrelated to the biological or scientific variables in a study.
+
+* Batch effects are problematic if they are confounded with the experimental variable.
+
+* Batch effects that are randomly distributed across experimental variables can be controlled for.
+
+* Randomise all technical steps in data generation in order to avoid batch effects.
+
+<img src="images/PlateBad.svg" class="centerimg" style="width: 40%">
+
+## Designing the right experiment - Batch effects 
+
+* Batch effects are sub-groups of measurements that have qualitatively different behavior across conditions and are unrelated to the biological or scientific variables in a study.
+
+* Batch effects are problematic if they are confounded with the experimental variable.
+
+* Batch effects that are randomly distributed across experimental variables can be controlled for.
+
+* Randomise all technical steps in data generation in order to avoid batch effects.
+
+<img src="images/PlateGood.svg" class="centerimg" style="width: 40%">
+
+<!--
+## Designing the right experiment - Batch effects 
+
+* Batch effects are sub-groups of measurements that have qualitatively different behavior across conditions and are unrelated to the biological or scientific variables in a study.
+
+* Batch effects are problematic if they are confounded with the experimental variable.
+
+* Batch effects that are randomly distributed across experimental variables can be controlled for.
+
+* Randomise all technical steps in data generation in order to avoid batch effects
+
+<img src="images/ed_bad.png" class="centerimg" style="width: 70%">
+
+## Designing the right experiment - Batch effects 
+
+* Batch effects are sub-groups of measurements that have qualitatively different behavior across conditions and are unrelated to the biological or scientific variables in a study.
+
+* Batch effects are problematic if they are confounded with the experimental variable.
+
+* Batch effects that are randomly distributed across experimental variables can be controlled for.
+
+* Randomise all technical steps in data generation in order to avoid batch effects
+
+<img src="images/ed_good.png" class="centerimg" style="width: 70%">
+
+
+## Designing the right experiment - Batch effects 
+
+### Multiplexing
+
+<img src="images/multiplexing.jpg" class="centerimg" style="width: 65%">
+
+
+
+## Designing the right experiment - Hidden Confounding variables
+
+
+* Think deeply about the samples you are collecting
+
+* This will be covered in more detail tomorrow
+
+
+
+-->
+
+## Designing the right experiment - Batch effects 
+
+* Batch effects are sub-groups of measurements that have qualitatively different behavior across conditions and are unrelated to the biological or scientific variables in a study.
+
+* Batch effects are problematic if they are confounded with the experimental variable.
+
+* Batch effects that are randomly distributed across experimental variables can be controlled for.
+
+* Randomise all technical steps in data generation in order to avoid batch effects
+
+* **Record everything**: Age, sex, litter, cell passage .. 
+
+## RNAseq Workflow
+
+
+<div style="width: 40%; 
+            float: left"> 
+
+            
+<div class="wkfthree2">
+<span style="color: #2e2892;">**Experimental Design**</span>
+</div>
+
+<div class="wkfthree2">
+<span style="color: #8b0000;">**Library Preparation**</span>
+</div>
+
+<div class="wkfthree2">
+<span style="color: #2e2892;">**Sequencing**</span>
+</div>
+
+<div class="wkfthree2">
+<span style="color: #2e2892;">**Bioinformatics Analysis**</span>
+</div>
+</div>
+
+<div style="margin-left: 60px;
+            float: none;">  
+            
+<img src="images/RNAseq_WorkFlow.png" style="width: 48%; margin-left: auto; margin-right: auto; display: block;">
+</div>
+
+<div style="text-align: right">
+<p style="font-size: 14px">Image adapted from: Wang, Z., et al. (2009), Nature Reviews Genetics, 10, 57–63.</p>
+</div>
+
+## Library preparation
+
+<div style="position: relative; 
+            z-index: 0;
+            height: 480px;
+            width: 960px;">
+<div style="z-index: 1;
+            position: absolute;
+            top: 0px;
+            left: 0px">
+<img src="images/RNA_Extraction.svg" class="centerimg" style="width: 80%">
+</div>
+
+<div style="z-index: 2;
+            position: absolute;
+            bottom: 0px;
+            left: 0px;">
+<div>
+<img src="images/rRNA.svg" style="width: 8%"> - Ribosomal RNA
+</div>
+<div>
+<img src="images/mRNA.svg" style="width: 8%"> - Poly-A transcripts
+</div>
+<div>
+<img src="images/OtherRNA.svg" style="width: 8%"> - Other RNAs e.g. tRNA, miRNA etc.
+</div>
+</div>
+
+<div style="z-index:3;
+            position: absolute;
+            left: 10px;
+            bottom: 185px">
+<p style="font-size:26px">Total RNA extraction</p>
+</div>
+
+## Library preparation
+
+<div style="width: 45%;
+            float: left;">
+<div style="text-align: center;">
+<span style="color: #2e2892;">**Poly-A Selection**</span>
+</div>
+<div style="padding-top: 20px;
+            padding-bottom: 20px;">
+<img src="images/polyA_selection.svg" class="centerimg" style="width: 95%">
+</div>  
+<div>
+Poly-A transcripts e.g.:
+  
+* mRNAs
+* immature miRNAs
+* snoRNA
+</div>
+</div>
+
+<div style="width: 45%;
+            float: right;">
+<div style="text-align: center;">
+<span style="color: #2e2892;">**Ribominus selection**</span>
+</div>
+<div style="padding-top: 20px;
+            padding-bottom: 20px;">
+<img src="images/ribominus_selection.svg" class="centerimg" style="width: 95%">
+</div>  
+<div>
+Poly-A transcripts + Other mRNAs e.g.:
+
+* tRNAs
+* mature miRNAs
+* piRNAs
+</div>
+</div>
+
+<!--
+
+## Library preparation
+
+<img src="images/IlluminaLibraryPrep1.png" class="centerimg" style="width: 85%">
+
+## Library preparation
+
+<img src="images/IlluminaLibraryPrep2.png" class="centerimg" style="width: 85%">
+
+--> 
+
+## RNAseq Workflow
+
+
+<div style="width: 40%; 
+            float: left"> 
+
+            
+<div class="wkfthree2">
+<span style="color: #2e2892;">**Experimental Design**</span>
+</div>
+
+<div class="wkfthree2">
+<span style="color: #2e2892;">**Library Preparation**</span>
+</div>
+
+<div class="wkfthree2">
+<span style="color: #8b0000;">**Sequencing**</span>
+</div>
+
+<div class="wkfthree2">
+<span style="color: #2e2892;">**Bioinformatics Analysis**</span>
+</div>
+</div>
+
+<div style="margin-left: 60px;
+            float: none;">  
+            
+<img src="images/RNAseq_WorkFlow.png" style="width: 48%; margin-left: auto; margin-right: auto; display: block;">
+</div>
+
+<div style="text-align: right">
+<p style="font-size: 14px">Image adapted from: Wang, Z., et al. (2009), Nature Reviews Genetics, 10, 57–63.</p>
+</div>
+
+<!--
+## Sequencing by synthesis 
+
+<img src="images/Illumina_SBS.001.png" class="centerimg" style="width: 100%">
+
+## Sequencing by synthesis 
+
+<img src="images/Illumina_SBS.002.png" class="centerimg" style="width: 100%">
+
+## Sequencing by synthesis 
+
+<img src="images/Illumina_SBS.003.png" class="centerimg" style="width: 100%">
+
+## Sequencing by synthesis 
+
+<img src="images/Illumina_SBS.004.png" class="centerimg" style="width: 100%">
+
+## Sequencing by synthesis 
+
+<img src="images/Illumina_SBS.005.png" class="centerimg" style="width: 100%">
+
+## Sequencing by synthesis 
+
+<img src="images/Illumina_SBS.006.png" class="centerimg" style="width: 100%">
+
+## Sequencing by synthesis 
+
+<img src="images/Illumina_SBS.007.png" class="centerimg" style="width: 100%">
+
+## Sequencing by synthesis 
+
+<img src="images/Illumina_SBS.008.png" class="centerimg" style="width: 100%">
+
+
+## Sequencing by synthesis 
+
+<img src="images/Illumina_SBS.009.png" class="centerimg" style="width: 100%">
+
+## Sequencing by synthesis 
+
+<img src="images/Illumina_SBS.010.png" class="centerimg" style="width: 100%">
+
+## Sequencing by synthesis 
+
+<img src="images/Illumina_SBS.011.png" class="centerimg" style="width: 100%">
+
+## Sequencing by synthesis 
+
+<img src="images/Illumina_SBS.012.png" class="centerimg" style="width: 100%">
+
+## Sequencing by synthesis 
+
+<img src="images/Illumina_SBS.013.png" class="centerimg" style="width: 100%">
+
+## Sequencing by synthesis 
+
+<img src="images/Illumina_SBS.014.png" class="centerimg" style="width: 100%">
+
+## Sequencing by synthesis 
+
+<img src="images/Illumina_SBS.015.png" class="centerimg" style="width: 100%">
+
+## Sequencing by synthesis 
+
+<img src="images/Illumina_SBS.016.png" class="centerimg" style="width: 100%">
+
+## Sequencing by synthesis 
+
+<img src="images/Illumina_SBS.017.png" class="centerimg" style="width: 100%">
+
+## Sequencing by synthesis 
+
+<img src="images/Illumina_SBS.018.png" class="centerimg" style="width: 100%">
+
+## Sequencing by synthesis 
+
+<img src="images/Illumina_SBS.019.png" class="centerimg" style="width: 100%">
+
+--> 
+
+## RNAseq Workflow
+
+<div style="width: 40%; 
+            float: left"> 
+
+            
+<div class="wkfthree2">
+<span style="color: #2e2892;">**Experimental Design**</span>
+</div>
+
+<div class="wkfthree2">
+<span style="color: #2e2892;">**Library Preparation**</span>
+</div>
+
+<div class="wkfthree2">
+<span style="color: #2e2892;">**Sequencing**</span>
+</div>
+
+<div class="wkfthree2">
+<span style="color: #8b0000;">**Bioinformatics Analysis**</span>
+</div>
+</div>
+
+<div style="margin-left: 60px;
+            float: none;">  
+            
+<img src="images/RNAseq_WorkFlow.png" style="width: 48%; margin-left: auto; margin-right: auto; display: block;">
+</div>
+
+<div style="text-align: right">
+<p style="font-size: 14px">Image adapted from: Wang, Z., et al. (2009), Nature Reviews Genetics, 10, 57–63.</p>
+</div>
+
+## Case Study 
+
+<img src="images/case_study.png" class="centerimg" style="width: 60%">
+
+<!-- ## Differential Gene Expression Analysis Workflow {#less_space_after_title} -->
+
+<!-- <div style="line-height: 50%;"><br></div> -->
+
+<!-- <img src="images/workflow_3Day.svg" class="centerimg" style="width: 80%; margin-top: 60px;"> -->
+<!-- <!-- <img src="images/workflow.svg" class="centerimg" style="width: 60%;"> --> 
+
+## Differential Gene Expression Analysis Workflow {#less_space_after_title}
+
+<div style="line-height: 50%;"><br></div>
+
+<img src="images/workflow_3Day.svg" class="centerimg" style="width: 80%; margin-top: 60px;">
+
+<!--
+
+## Sources of Noise
+
+<img src="images/Noise.svg" style="width: 65%; margin-left: 23%">
+
+## Sources of Noise - Sampling Bias
+
+<img src="images/SamplingBias.svg" class="centerimg" style="width: 60%">
+
+
+## Sources of Noise - Transcript Length
+
+<div style="margin-top: 60px; margin-bottom: 40px;">
+<img src="images/TranscriptLength.svg" class="centerimg" style="width: 65%">
+</div>
+
+<div>
+The length of the transcript affects the number of RNA fragments present in the
+library from that gene.
+</div>
+
+
+## Sources of Noise - Sequencing Artefacts
+
+<img src="images/SequencingArtefacts.png" class="centerimg" style="width: 75%">
+
+-->
+
+
+<!--
+
+## Normalisation - scaling
+
+Library Size 
+
+* Normalise each sample by total number of reads sequenced.  
+
+* Can also use another statistic similar to total count eg. median, upper 
+quartile 
+
+* Does not account for composition bias
+
+<div style="line-height: 50%;"><br></div>
+
+<img src="images/scaling.svg" class="centerimg" style="width: 40%">
+
+-->
+
+## DESeq2 analysis workflow
+
+
+<div style="line-height: 50%;"><br></div>
+
+<img src="images/DESeq2_workflow_00.png" class="centerimg" style="width: 25%">
+
+## Normalisation
+
+* Quantification estimates the *relative* read counts for each gene
+
+* Does this **accurately** represent the original population of RNAs?
+
+* The relationship between counts and RNA expression is not the same for all 
+genes across all samples
+
+
+<div style="width: 30%; 
+    float: left;
+    border-style: solid; 
+    border-width: 1px;
+    border-radius: 25px; 
+    padding: 20px; 
+    margin-right: 10%;
+    margin-left: 10%;">
+<span style="color: #2e3192">**Library Size**</span>
+
+Differing sequencing depth
+
+</div>
+
+<div style="width: 30%; 
+    float: left; 
+    border-style: solid; 
+    border-width: 1px;
+    border-radius: 25px; 
+    padding: 20px;">
+<span style="color: #2e3192">**Gene properties**</span>
+
+Length, GC content, sequence
+
+</div>
+
+<div style="width: 40%; 
+    float: left; 
+    border-style: solid; 
+    border-width: 1px;
+    border-radius: 25px; 
+    padding: 20px;
+    clear: both;
+    margin-top: 20px;
+    margin-left: 27%">
+<span style="color: #2e3192;">**Library composition**</span>
+
+Highly expressed genes overrepresented at the cost of lowly expressed genes
+
+"Composition Bias"
+
+</div>
+
+## Normalisation - Geometric mean scaling factor
+
+* Used by DESeq2
+
+<div class="smalltext" style="margin-left: 25px">
+1. For each gene calculate the geometric mean across all samples
+2. For each gene in each sample, normalise by dividing by the geometric mean for that gene
+3. For each sample calculate the scaling factor as the median of the normalised counts
+</div>
+
+<img src="images/DESeq2_workflow_01.png"  style="width: 16%; float: left">
+
+<img src="images/GeometricScaling.svg" style="margin-left: 15%; width: 63%">
+
+## Differential Expression
+
+* Comparing feature abundance under different conditions
+
+*  Assumes linearity of signal
+
+*  When feature=gene, well-established pre- and post-analysis strategies exist
+
+<div style="line-height: 50%;"><br></div>
+
+<img src="images/LinearityOfCounts.png" class="centerimg" style="width: 40%;
+    border-style: solid; 
+    border-width: 1px;
+    ">
+
+<div style="text-align: right">
+    Mortazavi, A. et al (2008) Nature Methods
+</div>
+
+## Differential Expression
+
+Simple difference in means  
+
+<img src="images/DifferenceInMeans.png" class="centerimg" style="width: 60%;">
+
+<div style="text-align: right">
+    Replication introduces variation
+</div>
+
+## Differential Expression - Modelling population distributions
+
+* Normal (Gaussian) Distribution - t-test
+
+* Two parameters - $mean$ and $sd$ ($sd^2 = variance$)
+
+* Suitable for microarray data but not for RNAseq data
+
+<div style="width: 60%; margin-left: 16%; padding-top: 5px">
+
+```{r diffInMeans, echo=FALSE, fig.width=7, fig.height=4}
+library(shape)
+x1 <- seq(0, 6, length=100)
+hx1 <- dnorm(x1, mean = 3, sd = 1)
+x2 <- seq(2, 12, length=100)
+hx2 <- dnorm(x2, mean = 7, sd = 1.5)
+par(bg=NA, mar=c(5, 4, 0, 4) + 0.1) 
+
+plot(x1, hx1, type="l", lty=1, 
+     xlab="x value", ylab="Density",
+     col="tomato", ylim=c(0, 0.6), xlim=c(0, 13))
+lines(x2, hx2, type="l", col="steelblue")
+abline(v=3, col="tomato3", lty=2)
+abline(v=7, col="steelblue3", lty=2)
+Arrows(3.3, 0.5, 6.7, 0.5, code = 3, arr.type = "curved")
+```
+</div>
+
+## Differential Expression - Modelling population distributions
+
+* Count data - Poisson distribution
+
+* One parameter - $mean$ $(\lambda)$
+
+* $variance$ = $mean$
+
+<div style="width: 60%; margin-left: 16%; padding-top: 5px">
+```{r poissonDistr, echo=FALSE, fig.width=7, fig.height=4}
+x1 <- seq(0, 20)
+hx1 <- dpois(x1, lambda = 1)
+hx2 <- dpois(x1, lambda = 4)
+hx3 <- dpois(x1, lambda = 10)
+par(bg=NA, mar=c(5, 4, 0, 4) + 0.1) 
+plot(x1, hx1, type="l", lty=1,
+     xlab="k", ylab="P(X=k)")
+lines(x1, hx2, type="l")
+lines(x1, hx3, type="l")
+cols <- c("coral2", "darkgoldenrod1", "deepskyblue3")
+points(x1, hx1, bg=cols[1], pch=21)
+points(x1, hx2, bg=cols[2], pch=21)
+points(x1, hx3, bg=cols[3], pch=21)
+leg <- c(expression(paste(lambda, " =  ", 1)),
+         expression(paste(lambda, " =  ", 4)),
+         expression(paste(lambda, " = ", 10)))
+legend("topright", legend = leg, pt.bg = cols, pch=21, bty="n")
+```
+</div>
+
+## Differential Expression - Modelling population distributions
+
+<img src="images/DESeq2_workflow_03.png"  style="width: 16%; float: left; 
+    margin-top: 40px">
+
+    
+<div style="width: 45%; float: left; 
+    margin-right: 10px; 
+    margin-left: 30px; 
+    margin-top: 40px">
+
+* Use the Negative Binomial distribution
+
+* In the NB distribution $mean$ not equal to $variance$
+
+* Two paramenters - $mean$ and $dispersion$
+
+* $dispersion$ describes how $variance$ changes with $mean$
+
+</div>
+
+<img src="images/NegativeBinomialDistribution.png" style="width: 33%; 
+    margin-top: 40px">
+
+<div style="text-align: right">
+    Anders, S. & Huber, W. (2010) Genome Biology
+</div>
+
+<!--
+
+## Differential Expression - estimating dispersion
+
+
+<img src="images/DESeq2_workflow_03.png"  style="width: 16%; float: left; 
+    margin-top: 40px">
+
+<div style="width: 40%; float: left; 
+    margin-right: 10px; 
+    margin-left: 30px; 
+    margin-top: 40px">
+
+* Estimating the dispersion parameter can be difficult with a small number of samples 
+
+* DESeq2 models the variance as the sum of technical and biological variance
+
+* Esimate dispersion for each gene
+
+* ‘Share’ dispersion information between genes to obtain fitted estimate
+
+* Shrink gene-wise estimates towards the fitted estimates
+
+</div>
+
+<img src="images/dispersion.png" style="width: 38%; margin-top: 40px">
+
+
+## Differential Expression - worrying dispersion plot examples
+-->
+
+<!--
+A note about these dispersion plots:
+
+I wrote the Harvard team and got the response below. This is basically what Dom
+surmised. For the second plot, Dom thinks it is conceivable that there could be
+nothing wrong with the data as such and that this pattern could arise if you
+had a particularly unusual treatment, perhaps resulting in extreme
+downregulation of a large cohort of genes and extreme upregulation of another
+large cohort of genes. Either way, in both cases the thing to do is not to
+worry about trying to interpret the problem from the dispersion plot, but to go
+back to the raw data and figure out what is unusual.
+
+From: Piper, Mary <piper@hsph.harvard.edu>
+Sent: 01 July 2020 01:19
+To: Ashley Sawle <Ashley.Sawle@cruk.cam.ac.uk>
+Cc: HSPH-HBCTraining <HBCtraining@hsph.harvard.edu>
+Subject: Re: A question about your RNAseq course from a fellow trainer
+ 
+Hi Ash,
+
+Glad that our materials are useful to you - we have converted the DGE materials
+to an online course format too, which is available at:
+https://hbctraining.github.io/DGE_workshop_salmon_online/schedule/. I added
+these dispersion plots a while ago, and I believe that the first plot was from
+data that was highly contaminated with rRNA. I think the rRNA was
+computationally removed prior to the analysis from a low input RNA-seq library
+back 3-4 years ago, but there were still large differences in the complexity of
+the samples (the data was a real mess). The second plot was from a student who
+had taken our course; I know the data was really weird in that it had very few
+genes with higher mean counts (it also had weird MA plot and poor clustering by
+PCA). However, since I had not analyzed the data, I only offered suggestions
+for looking into the dataset - I don't know if they were able to rescue their
+dataset (b/c I believe they also did not have any/many DE genes). So, the bad
+dispersion plot is likely due to the strange nature of their data with few
+genes with higher mean counts (so the dispersion could not be estimated as
+accurately across genes with higher mean counts) and/or affected by the outlier
+sample/s.
+
+Note that in the online materials, I have an additional bad dispersion plot in
+an exercise. This plot was from a pseudobulk scRNA-seq analysis - the data
+reflect a single cell type that had huge variations in the number of cells
+collapsed together per sample to generate the sample-level counts. Some samples
+had only  a handful of cells, while other samples had thousands. Therefore, you
+can imagine the variation being quite large between samples of the same sample
+group.
+
+Hope this helps, and please let me know if you have additional questions.
+
+Best wishes,
+Mary
+
+-->
+<!--
+<div><br></div>
+
+<img src="images/bad_dispersion.png" class="centerimg" style="width: 100%">
+
+<div style="text-align: right;">
+    Bad dispersion plots from: https://github.com/hbctraining/DGE_workshop
+</div>
+-->
+
+## Differential Expression - linear models
+
+* Calculate coefficients describing change in gene expression
+
+* Linear Model $\rightarrow$ Generalized Linear Model
+
+<img src="images/DESeq2_workflow_04.png"  style="width: 16%; float: left; 
+    padding-top: 5px">
+
+<div style="width: 30%; margin-left: 30%; padding-top: 5px">
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.width=6, fig.height=3.5}
+library(tidyverse)
+set.seed(42)
+tibble(Dose=rep(c(0:5), 6)) %>% 
+  mutate(Mean=Dose*1.7 + 1.8) %>% 
+  mutate(Expression=map_dbl(Mean, ~rnorm(1, mean=.x, sqrt(.x)*0.3))) %>% 
+  ggplot(aes(x=Dose, y=Expression)) +
+    geom_smooth(method="lm", colour="green", se = FALSE, size=0.5) +
+    geom_point(shape=21, fill="#45A347") + 
+    theme(plot.background = element_rect(fill = "transparent", colour = NA))
+```
+</div>
+
+## Differential Expression - linear models
+
+* Calculate coefficients describing change in gene expression
+
+* Linear Model $\rightarrow$ General Linear Model
+
+<img src="images/DESeq2_workflow_04.png"  style="width: 16%; float: left; 
+    padding-top: 5px">
+
+<div style="width: 30%; margin-left: 20%; padding-top: 5px">
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=4}
+library(tidyverse)
+set.seed(1751234)
+dat <- data.frame(C1=rnorm(6, 4, 1),
+                  C2=rnorm(6, 6, 1.3)) %>% 
+    gather("Cat", "Expression") %>% 
+    mutate(Group=as.numeric(factor(Cat)))
+
+ewe <- lm(dat$Expression~dat$Group)
+
+par(bg=NA, mar=c(5, 4, 0, 4) + 0.1) 
+plot(dat$Group, dat$Expression, 
+     pch=21, 
+     bg=rep(c("tomato", "steelblue"), each=6),
+     xlim=c(0, 3),
+     ylim=c(0, 8), xaxt="n", xlab="Group", ylab = "Expression")
+axis(1, labels = c("Control", "Treatment"), at = 1:2)
+abline(h=5, lty=2, col="grey")
+abline(ewe, col="red")
+
+```
+</div>
+
+## Differential Expression - linear models
+
+* Calculate coefficients describing change in gene expression
+
+* Linear Model $\rightarrow$ General Linear Model
+
+<img src="images/DESeq2_workflow_04.png"  style="width: 16%; float: left; 
+    padding-top: 5px">
+
+<div style="width: 30%; margin-left: 20%; padding-top: 5px">
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=4}
+par(bg=NA, mar=c(5, 4, 0, 4) + 0.1) 
+plot(dat$Group, dat$Expression, 
+     pch=21, 
+     bg=rep(c("tomato", "steelblue"), each=6),
+     xlim=c(0, 3),
+     ylim=c(0, 8), xaxt="n", xlab="Group", ylab = "Expression")
+axis(1, labels = c("0", "1"), at = 1:2)
+abline(v=1, col="black")
+abline(h=5, lty=2, col="grey")
+points(dat$Group, dat$Expression, 
+     pch=21, 
+     bg=rep(c("tomato", "steelblue"), each=6))
+abline(ewe, col="red")
+
+```
+</div>
+
+
+## Towards biological meaning - hierachical clustering {#less_space_after_title}
+
+<div style="line-height: 50%;"><br></div>
+
+<img src="images/Heatmap.svg" style="width: %; 
+                                     display: block;
+                                     margin-left: 32%;">
+
+
+## Towards biological meaning - Gene Ontology testing {#less_space_after_title}
+
+<img src="images/GOenrichment.svg" style="width: 70%; 
+                                     display: block;
+                                     margin-left: 8%;
+                                     margin-top: 10%">
+
+## Towards biological meaning - Gene Set Enrichment Analysis {#less_space_after_title}
+
+<div style="line-height: 50%;"><br></div>
+
+<div style="float: left; width: 50%; margin-left: 5%; margin-top: 50px">
+<img src="images/GSEA-homegraphic.gif">
+
+    http://software.broadinstitute.org/gsea
+</div>
+
+<div>
+<img src="images/MSigDBTrsp.png" style="width: 45%;">
+</div>
+
+## Towards biological meaning - Pathway Analysis {#less_space_after_title}
+
+<div style="line-height: 50%;"><br></div>
+
+<img src="images/mmu03320.pathview.png" class="centerimg" style="width: 65%">
+
+##
