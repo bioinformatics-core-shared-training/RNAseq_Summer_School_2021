@@ -20,9 +20,9 @@ bibliography: ref.bib
 
 ## A Simple Counting Approach
 
-We now have the locations of our reads on the genome.
+Align to the genome to get the locations of our reads.
 
-We also know the locations of exons of genes on the genome.
+Gene annotation references give us the locations of exons of genes on the genome.
 
 So the simplest approach is to count how many reads overlap each gene.
 
