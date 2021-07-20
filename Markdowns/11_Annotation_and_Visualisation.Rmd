@@ -13,6 +13,7 @@ bibliography: ref.bib
 ```{r setup, message=FALSE, warning=F}
 library(AnnotationHub)
 library(AnnotationDbi)
+library(ensembldb)
 library(DESeq2)
 library(tidyverse)
 ```

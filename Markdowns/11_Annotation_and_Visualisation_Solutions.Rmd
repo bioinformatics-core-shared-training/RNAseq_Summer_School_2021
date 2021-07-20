@@ -11,6 +11,7 @@ subtitle: Annotation and Visualisation of Differential Expression Results - Solu
 ```{r setup, include=FALSE}
 library(AnnotationHub)
 library(AnnotationDbi)
+library(ensembldb)
 library(DESeq2)
 library(tidyverse)
 ```
