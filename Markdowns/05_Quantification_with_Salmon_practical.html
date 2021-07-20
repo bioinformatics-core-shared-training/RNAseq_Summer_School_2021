@@ -217,7 +217,31 @@ pre code {
 </div>
 <div id="exercise-1---create-salmon-index" class="section level2">
 <h2>Exercise 1 - Create Salmon index</h2>
-<p><code>&gt; First ensure you are working in the correct directory &gt; &gt;```bash &gt;cd ~/Course_Materials/RNAseq  &gt;``` &gt; 1. Create concatenated trancriptome/genome reference file. The two files that &gt; we need are in the</code>references<code>directory. &gt; &gt;```bash &gt;cat references/Mus_musculus.GRCm38.cdna.chr14.fa.gz \ &gt;    references/Mus_musculus.GRCm38.dna_sm.chr14.fa.gz \ &gt;    &gt; references/gentrome.chr14.fa.gz &gt;``` &gt; 2. Create decoy sequence list from the genomic fasta &gt; &gt;```bash &gt;echo &quot;14&quot; &gt; references/decoys.txt &gt;``` &gt; 3. Use</code>salmon index<code>to create the index. You will need to provide three &gt;  pieces of information: &gt;     * the **Transcript fasta file** - *references/gentrome.chr14.fa.gz* &gt;     * the **decoys** - *references/decoys.txt* &gt;     * the **salmon index** - a directory to write the index to, use **references/salmon_index_chr14**   &gt; &gt; Also add</code>-p 7<code>to the command to instruct salmon to use 7 threads/cores. &gt; To find the flags for the other three pieces of information use: &gt; &gt;```bash &gt;salmon index --help &gt;``` &gt; &gt; One thing to note here is that we have not specified the</code>-k` parameter. This &gt; parameter sets the kmer size that the index will be based on and relates to &gt; the minimum size of kmer used for quasi-mapping. The default is 31 bases, and &gt; this is fine for read sizes over 75 bases. If your read size is less that 75, &gt; you would need to adjust this. You should set the kmer size to slightly less &gt; than half of the read length. Quasi-mapping looks for kmers that are perfect &gt; match to the reference sequence. If the kmer size is more than half the read &gt; length, then a read with a mismatch in the middle of the read will never be &gt; able to be mapped to the transcriptome, even if all other bases are a perfect &gt; match for the sequence at the location that it originated.</p>
+<blockquote>
+<p>First ensure you are working in the correct directory</p>
+<pre class="bash"><code>cd ~/Course_Materials/RNAseq </code></pre>
+<ol style="list-style-type: decimal">
+<li>Create concatenated trancriptome/genome reference file. The two files that we need are in the <code>references</code> directory.</li>
+</ol>
+<pre class="bash"><code>cat references/Mus_musculus.GRCm38.cdna.chr14.fa.gz \
+   references/Mus_musculus.GRCm38.dna_sm.chr14.fa.gz \
+   &gt; references/gentrome.chr14.fa.gz</code></pre>
+<ol start="2" style="list-style-type: decimal">
+<li>Create decoy sequence list from the genomic fasta</li>
+</ol>
+<pre class="bash"><code>echo &quot;14&quot; &gt; references/decoys.txt</code></pre>
+<ol start="3" style="list-style-type: decimal">
+<li>Use <code>salmon index</code> to create the index. You will need to provide three pieces of information:
+<ul>
+<li>the <strong>Transcript fasta file</strong> - <em>references/gentrome.chr14.fa.gz</em></li>
+<li>the <strong>decoys</strong> - <em>references/decoys.txt</em></li>
+<li>the <strong>salmon index</strong> - a directory to write the index to, use <strong>references/salmon_index_chr14</strong></li>
+</ul></li>
+</ol>
+<p>Also add <code>-p 7</code> to the command to instruct salmon to use 7 threads/cores. To find the flags for the other three pieces of information use:</p>
+<pre class="bash"><code>salmon index --help</code></pre>
+<p>One thing to note here is that we have not specified the <code>-k</code> parameter. This parameter sets the kmer size that the index will be based on and relates to the minimum size of kmer used for quasi-mapping. The default is 31 bases, and this is fine for read sizes over 75 bases. If your read size is less that 75, you would need to adjust this. You should set the kmer size to slightly less than half of the read length. Quasi-mapping looks for kmers that are perfect match to the reference sequence. If the kmer size is more than half the read length, then a read with a mismatch in the middle of the read will never be able to be mapped to the transcriptome, even if all other bases are a perfect match for the sequence at the location that it originated.</p>
+</blockquote>
 </div>
 </div>
 <div id="gene-expression-quantification" class="section level1">

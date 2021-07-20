@@ -2,8 +2,8 @@
 title: "Introduction to Bulk RNAseq data analysis"
 subtitle: Quantification of Gene Expression with Salmon
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 bibliography: ref.bib
 ---
 
@@ -82,7 +82,7 @@ create the index. We don't need to make the directory, salmon will do this
 itself.
 
 ## Exercise 1 - Create Salmon index
-`> First ensure you are working in the correct directory
+> First ensure you are working in the correct directory
 >```{bash eval=FALSE}
 >cd ~/Course_Materials/RNAseq 
 >````
