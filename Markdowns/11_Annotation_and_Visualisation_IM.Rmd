@@ -1,8 +1,10 @@
 ---
 title: "Introduction to Bulk RNAseq data analysis"
-subtitle: "Annotation and Visualisation of Differential Expression Results"
-date: '`r format(Sys.time(), "Last modified: %d %b %Y")`'
+subtitle: Annotation and Visualisation of Differential Expression Results
+date: "`r format(Sys.time(), "Last modified: %d %b %Y")`"
 output:
+  pdf_document:
+    toc: yes
   html_document:
     toc: yes
 bibliography: ref.bib
@@ -15,6 +17,7 @@ SETWD WITH GUI
 ```{r setup, message=FALSE, warning=F}
 library(AnnotationHub)
 library(AnnotationDbi)
+library(ensembldb)
 library(DESeq2)
 library(tidyverse)
 ```
