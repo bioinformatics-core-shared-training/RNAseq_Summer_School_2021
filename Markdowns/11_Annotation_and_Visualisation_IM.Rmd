@@ -3,9 +3,9 @@ title: "Introduction to Bulk RNAseq data analysis"
 subtitle: Annotation and Visualisation of Differential Expression Results
 date: "`r format(Sys.time(), "Last modified: %d %b %Y")`"
 output:
-  pdf_document:
-    toc: yes
   html_document:
+    toc: yes
+  pdf_document:
     toc: yes
 bibliography: ref.bib
 ---
@@ -86,8 +86,8 @@ annotations <- genes(MouseEnsDb, return.type = "data.frame")
 colnames(annotations)
 
 annot <- annotations %>%
-  dplyr::select(gene_id, gene_name, entrezid) %>%
-  dplyr::filter(gene_id %in% rownames(results.interaction.11))
+  select(gene_id, gene_name, entrezid) %>%
+  filter(gene_id %in% rownames(results.interaction.11))
 
 ```
 
